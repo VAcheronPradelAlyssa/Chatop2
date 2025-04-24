@@ -7,6 +7,11 @@ import com.openclassrooms.chatop.dto.UserResponse;
 import com.openclassrooms.chatop.entity.User;
 import com.openclassrooms.chatop.repository.UserRepository;
 import com.openclassrooms.chatop.service.JwtService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
@@ -88,6 +93,13 @@ public ResponseEntity<?> getUserDetails(@RequestHeader("Authorization") String t
                 .body(new LoginResponseDto(token, user.getId()));
     }
     // 🔐 Login
+    
+    @Operation(summary = "Connexion d’un utilisateur")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Connexion réussie, JWT retourné"),
+        @ApiResponse(responseCode = "401", description = "Email ou mot de passe incorrect"),
+        @ApiResponse(responseCode = "500", description = "Erreur serveur")
+    })
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequestDto loginRequest) {
         Optional<User> userOptional = userRepository.findByEmail(loginRequest.getEmail());
