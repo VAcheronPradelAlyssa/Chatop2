@@ -1,6 +1,7 @@
 package com.openclassrooms.chatop.controller;
 
 import com.openclassrooms.chatop.dto.LoginResponseDto;
+import com.openclassrooms.chatop.dto.LoginRequestDto;
 import com.openclassrooms.chatop.dto.RegisterRequestDto;
 import com.openclassrooms.chatop.dto.UserResponse;
 import com.openclassrooms.chatop.entity.User;
@@ -85,5 +86,24 @@ public ResponseEntity<?> getUserDetails(@RequestHeader("Authorization") String t
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new LoginResponseDto(token, user.getId()));
+    }
+    // 🔐 Login
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequestDto loginRequest) {
+        Optional<User> userOptional = userRepository.findByEmail(loginRequest.getEmail());
+
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Utilisateur non trouvé");
+        }
+
+        User user = userOptional.get();
+
+        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Mot de passe invalide");
+        }
+
+        String token = jwtService.generateToken(user.getEmail());
+
+        return ResponseEntity.ok(new LoginResponseDto(token, user.getId()));
     }
 }
