@@ -1,5 +1,7 @@
 package com.openclassrooms.chatop.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.openclassrooms.chatop.dto.RentalDTO;
 import com.openclassrooms.chatop.dto.RentalResponse;
 import com.openclassrooms.chatop.entity.Rental;
@@ -82,6 +84,20 @@ public class RentalController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+    @PutMapping(value = "/{id}", consumes = "multipart/form-data")
+    public ResponseEntity<Rental> updateRental(
+            @PathVariable Integer id,
+            @RequestPart("rental") RentalDTO rentalDTO,
+            @RequestPart(value = "picture", required = false) MultipartFile pictureFile
+    ) {
+        // Met à jour le DTO avec l'ID et le fichier image
+        rentalDTO.setId(id);
+        rentalDTO.setPictureFile(pictureFile);
+        
+        // Appeler le service pour la mise à jour
+        Rental updated = rentalService.updateRental(rentalDTO);
+        return ResponseEntity.ok(updated);
+    }
+    
 
-  
 }

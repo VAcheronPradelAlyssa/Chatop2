@@ -3,12 +3,15 @@ package com.openclassrooms.chatop.controller;
 import com.openclassrooms.chatop.dto.LoginResponseDto;
 import com.openclassrooms.chatop.dto.LoginRequestDto;
 import com.openclassrooms.chatop.dto.RegisterRequestDto;
+import com.openclassrooms.chatop.dto.RegisterResponseDTO;
 import com.openclassrooms.chatop.dto.UserResponse;
 import com.openclassrooms.chatop.entity.User;
 import com.openclassrooms.chatop.repository.UserRepository;
 import com.openclassrooms.chatop.service.JwtService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
@@ -33,45 +36,51 @@ public class AuthController {
     @Autowired
     private JwtService jwtService;
 
-    
+    @Operation(summary = "Get authenticated user info", description = "Retrieves information about the currently authenticated user.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User info retrieved successfully", content = @Content(schema = @Schema(implementation = UserResponse.class)))
+    })
     @GetMapping("/me")
-public ResponseEntity<?> getUserDetails(@RequestHeader("Authorization") String token) {
-    try {
-        if (token == null || !token.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Token manquant ou invalide");
+    public ResponseEntity<?> getUserDetails(@RequestHeader("Authorization") String token) {
+        try {
+            if (token == null || !token.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Token manquant ou invalide");
+            }
+
+            String jwtToken = token.substring(7); // Enlever "Bearer " du token
+            if (!jwtService.isTokenValid(jwtToken)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Token invalide");
+            }
+
+            String email = jwtService.extractEmailFromToken(jwtToken);
+
+            Optional<User> userOptional = userRepository.findByEmail(email);
+            if (userOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Utilisateur non trouvé");
+            }
+
+            User user = userOptional.get();
+
+            // Création de l'objet UserResponse avec les dates
+            UserResponse userResponse = new UserResponse(
+                    user.getId(),
+                    user.getName(),
+                    user.getEmail(),
+                    user.getCreatedAt(),
+                    user.getUpdatedAt());
+
+            return ResponseEntity.ok(userResponse); // Renvoi de la réponse avec les informations utilisateur
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erreur serveur");
         }
-
-        String jwtToken = token.substring(7); // Enlever "Bearer " du token
-        if (!jwtService.isTokenValid(jwtToken)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Token invalide");
-        }
-
-        String email = jwtService.extractEmailFromToken(jwtToken);
-
-        Optional<User> userOptional = userRepository.findByEmail(email);
-        if (userOptional.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Utilisateur non trouvé");
-        }
-
-        User user = userOptional.get();
-        
-        // Création de l'objet UserResponse avec les dates
-        UserResponse userResponse = new UserResponse(
-            user.getId(),
-            user.getName(),
-            user.getEmail(),
-            user.getCreatedAt(),
-            user.getUpdatedAt()
-        );
-
-        return ResponseEntity.ok(userResponse); // Renvoi de la réponse avec les informations utilisateur
-
-    } catch (Exception e) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erreur serveur");
     }
-}
 
-    // 🔐 Inscription
+    @Operation(summary = "Register a new user", description = "Registers a new user and returns a JWT token.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User registered successfully", content = @Content(schema = @Schema(implementation = RegisterResponseDTO.class))),
+            @ApiResponse(responseCode = "409", description = "Email already in use")
+    })
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequestDto request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
@@ -90,15 +99,14 @@ public ResponseEntity<?> getUserDetails(@RequestHeader("Authorization") String t
         String token = jwtService.generateToken(user.getEmail());
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new LoginResponseDto(token, user.getId()));
+                .body(new RegisterResponseDTO(token, user.getId()));
     }
     // 🔐 Login
-    
-    @Operation(summary = "Connexion d’un utilisateur")
+
+    @Operation(summary = "User login", description = "Authenticates a user with the provided credentials.")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Connexion réussie, JWT retourné"),
-        @ApiResponse(responseCode = "401", description = "Email ou mot de passe incorrect"),
-        @ApiResponse(responseCode = "500", description = "Erreur serveur")
+            @ApiResponse(responseCode = "200", description = "User authenticated successfully", content = @Content(schema = @Schema(implementation = LoginResponseDto.class))),
+            @ApiResponse(responseCode = "401", description = "Invalid credentials")
     })
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequestDto loginRequest) {

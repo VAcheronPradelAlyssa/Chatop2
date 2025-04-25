@@ -8,6 +8,8 @@ import com.openclassrooms.chatop.mappers.RentalMapper;
 import com.openclassrooms.chatop.repository.RentalRepository;
 import com.openclassrooms.chatop.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -93,4 +95,39 @@ public class RentalService {
             throw new RuntimeException("Failed to store file: " + e.getMessage(), e);
         }
     }
+
+    public Rental updateRental(RentalDTO rentalDTO) {
+    // Récupérer la location existante
+    Rental rental = rentalRepository.findById(rentalDTO.getId())
+            .orElseThrow(() -> new RuntimeException("Rental not found"));
+
+    // Récupérer l'utilisateur actuellement connecté
+    UserDetails currentUser = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+    // Vérifier que l'utilisateur connecté est bien le propriétaire de la location
+    if (!rental.getOwner().getEmail().equals(currentUser.getUsername())) {
+        throw new RuntimeException("You are not authorized to update this rental.");
+    }
+
+    // Récupérer le propriétaire basé sur l'email
+    User owner = userRepository.findByEmail(rentalDTO.getOwnerEmail())
+            .orElseThrow(() -> new RuntimeException("Owner not found"));
+
+    // Mettre à jour les informations de la location
+    rental.setName(rentalDTO.getName());
+    rental.setSurface(rentalDTO.getSurface());
+    rental.setPrice(rentalDTO.getPrice());
+    rental.setDescription(rentalDTO.getDescription());
+    rental.setOwner(owner);
+    rental.setUpdatedAt(LocalDateTime.now());
+
+    // Mettre à jour l'image si un fichier est fourni
+    if (rentalDTO.getPictureFile() != null && !rentalDTO.getPictureFile().isEmpty()) {
+        String imagePath = savePicture(rentalDTO.getPictureFile());
+        rental.setPicture(imagePath);
+    }
+
+    return rentalRepository.save(rental);
+}
+
 }
