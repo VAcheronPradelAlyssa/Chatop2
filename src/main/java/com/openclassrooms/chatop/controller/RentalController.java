@@ -1,21 +1,15 @@
 package com.openclassrooms.chatop.controller;
 
 import com.openclassrooms.chatop.dto.RentalDTO;
-import com.openclassrooms.chatop.dto.RentalDetailsDto;
-import com.openclassrooms.chatop.repository.RentalRepository;
-
 import com.openclassrooms.chatop.dto.RentalResponse;
 import com.openclassrooms.chatop.entity.Rental;
-import com.openclassrooms.chatop.repository.RentalRepository;
 import com.openclassrooms.chatop.service.RentalService;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -36,7 +30,8 @@ import java.util.Map;
 @RequestMapping("/api/rentals")
 public class RentalController {
 
-    private static final String UPLOAD_DIR = "src/main/resources/static/uploads/";
+        private static final String UPLOAD_DIR = "uploads/";
+
 
     @Autowired
     private RentalService rentalService;
@@ -52,13 +47,13 @@ public class RentalController {
 
         String ownerEmail = userDetails.getUsername();
 
-        // Création du dossier si inexistant
+        // Création du dossier d'uploads si il n'existe pas
         File uploadDir = new File(UPLOAD_DIR);
         if (!uploadDir.exists()) {
             uploadDir.mkdirs();
         }
 
-        // Sauvegarde de l'image
+        // Sauvegarder l'image dans le dossier
         String fileName = picture.getOriginalFilename();
         Path filePath = Paths.get(UPLOAD_DIR, fileName);
         try {
@@ -67,23 +62,25 @@ public class RentalController {
             return ResponseEntity.internalServerError().build();
         }
 
-        // Création de la DTO avec l'URL relative
+        // Créer le DTO avec le chemin de l'image
         RentalDTO rentalDTO = new RentalDTO();
         rentalDTO.setName(name);
         rentalDTO.setSurface(surface);
         rentalDTO.setPrice(price);
-        rentalDTO.setPicture("/uploads/" + fileName); // <- URL accessible via le navigateur
+        rentalDTO.setPicture("http://localhost:3001/uploads/" + fileName); // URL complète pour accéder à l'image
         rentalDTO.setDescription(description);
         rentalDTO.setOwnerEmail(ownerEmail);
 
+        // Créer la location et la sauvegarder dans la base de données
         Rental createdRental = rentalService.createRental(rentalDTO);
         return ResponseEntity.ok(createdRental);
     }
 
-    @Operation(summary = "Create a new rental", description = "Creates a new rental with the provided details.", security = {
+    // Endpoint pour récupérer toutes les locations
+    @Operation(summary = "Get all rentals", description = "Fetches all rental listings.", security = {
             @SecurityRequirement(name = "Bearer Authentication") })
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Rental created successfully", content = @Content(schema = @Schema(implementation = RentalResponse.class)))
+            @ApiResponse(responseCode = "200", description = "List of rentals", content = @Content(schema = @Schema(implementation = RentalResponse.class)))
     })
     @GetMapping
     public Map<String, List<RentalResponse>> getRentals() {
@@ -93,6 +90,7 @@ public class RentalController {
         return response;
     }
 
+    // Endpoint pour récupérer une location spécifique par son ID
     @Operation(summary = "Get rental by ID", description = "Fetches rental information for a specific rental by its ID.", security = {
             @SecurityRequirement(name = "Bearer Authentication") })
     @ApiResponses(value = {
@@ -106,25 +104,35 @@ public class RentalController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-
+    // Endpoint de mise à jour d'une location
     @Operation(summary = "Update rental by ID", description = "Updates the information of a specific rental by its ID.", security = {
             @SecurityRequirement(name = "Bearer Authentication") })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Rental updated successfully", content = @Content(schema = @Schema(implementation = RentalResponse.class))),
             @ApiResponse(responseCode = "404", description = "Rental not found")
     })
-    @PutMapping(value = "/{id}", consumes = "multipart/form-data")
+    @PutMapping("/{id}")
     public ResponseEntity<Rental> updateRental(
             @PathVariable Integer id,
-            @RequestPart("rental") RentalDTO rentalDTO,
-            @RequestPart(value = "picture", required = false) MultipartFile pictureFile) {
-        // Met à jour le DTO avec l'ID et le fichier image
+            @RequestParam("name") String name,
+            @RequestParam("surface") Double surface,
+            @RequestParam("price") Double price,
+            @RequestParam(value = "picture", required = false) MultipartFile picture,
+            @RequestParam("description") String description,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        String ownerEmail = userDetails.getUsername();
+
+        RentalDTO rentalDTO = new RentalDTO();
         rentalDTO.setId(id);
-        rentalDTO.setPictureFile(pictureFile);
+        rentalDTO.setName(name);
+        rentalDTO.setSurface(surface);
+        rentalDTO.setPrice(price);
+        rentalDTO.setPicture(picture != null ? picture.getOriginalFilename() : null); // Prendre le nom du fichier si présent
+        rentalDTO.setDescription(description);
+        rentalDTO.setOwnerEmail(ownerEmail);
 
-        // Appeler le service pour la mise à jour
-        Rental updated = rentalService.updateRental(rentalDTO);
-        return ResponseEntity.ok(updated);
+        Rental updatedRental = rentalService.updateRental(rentalDTO);
+        return updatedRental != null ? ResponseEntity.ok(updatedRental) : ResponseEntity.notFound().build();
     }
-
 }

@@ -1,14 +1,13 @@
 package com.openclassrooms.chatop.dto;
 
 import lombok.Data;
+import org.springframework.web.multipart.MultipartFile;
 
 @Data
-public class RentalDTO {
-    private Integer id; // Ajout de l'identifiant
+public class RentalRequest {
     private String name;
     private Double surface;
     private Double price;
-    private String picture;
     private String description;
-    private String ownerEmail; // Email du propriétaire
+    private MultipartFile picture; // pour le fichier uploadé
 }

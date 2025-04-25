@@ -1,7 +1,6 @@
 package com.openclassrooms.chatop.service;
 
 import com.openclassrooms.chatop.dto.RentalDTO;
-import com.openclassrooms.chatop.dto.RentalDetailsDto;
 import com.openclassrooms.chatop.dto.RentalResponse;
 import com.openclassrooms.chatop.entity.Rental;
 import com.openclassrooms.chatop.entity.User;
@@ -9,144 +8,82 @@ import com.openclassrooms.chatop.mappers.RentalMapper;
 import com.openclassrooms.chatop.repository.RentalRepository;
 import com.openclassrooms.chatop.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.*;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class RentalService {
-
-    private static final String UPLOAD_DIR = "src/main/resources/static/uploads";
 
     @Autowired
     private RentalRepository rentalRepository;
 
     @Autowired
     private UserRepository userRepository;
-
     @Autowired
     private RentalMapper rentalMapper;
-
+   /**
+     * Récupère toutes les locations dans la base de données.
+     *
+     * @return la liste des rentals sous forme de DTOs
+     */
     public List<RentalResponse> getAllRentals() {
         return rentalRepository.findAll()
-                .stream().map(rentalMapper)
-                .toList();
+                .stream().map(rentalMapper)  // On transforme chaque Rental en RentalResponse
+                .toList(); // Collecte la liste
     }
 
+    /**
+     * Récupère une location par son ID.
+     *
+     * @param id L'ID de la location.
+     * @return Un Optional contenant la RentalResponse si la location est trouvée, sinon un Optional vide.
+     */
     public Optional<RentalResponse> getRentalById(Integer id) {
         return rentalRepository.findById(id)
-                .map(rentalMapper);
+                .map(rentalMapper);  // Conversion de Rental en RentalResponse si trouvé
     }
 
     public Rental createRental(RentalDTO rentalDTO) {
+        // Récupère l'utilisateur par son email
         User owner = userRepository.findByEmail(rentalDTO.getOwnerEmail())
-                .orElseThrow(() -> new RuntimeException("Owner not found"));
+                                   .orElseThrow(() -> new RuntimeException("Owner not found"));
 
         Rental rental = new Rental();
         rental.setName(rentalDTO.getName());
         rental.setSurface(rentalDTO.getSurface());
         rental.setPrice(rentalDTO.getPrice());
+        rental.setPicture(rentalDTO.getPicture()); // Chemin de l'image
         rental.setDescription(rentalDTO.getDescription());
-        rental.setOwner(owner);
+        rental.setOwner(owner); // Définir l'utilisateur propriétaire
         rental.setCreatedAt(LocalDateTime.now());
         rental.setUpdatedAt(LocalDateTime.now());
-
-        // Enregistrement du fichier image si présent
-        if (rentalDTO.getPictureFile() != null && !rentalDTO.getPictureFile().isEmpty()) {
-            String imagePath = savePicture(rentalDTO.getPictureFile());
-            rental.setPicture(imagePath);
-        } else {
-            rental.setPicture(null);
-        }
 
         return rentalRepository.save(rental);
     }
 
-   
-
-    private String savePicture(MultipartFile pictureFile) {
-        try {
-            // Création du dossier s'il n'existe pas
-            Path uploadPath = Paths.get(UPLOAD_DIR);
-            if (!Files.exists(uploadPath)) {
-                Files.createDirectories(uploadPath);
-            }
-
-            String originalFilename = StringUtils.cleanPath(pictureFile.getOriginalFilename());
-            String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
-            String newFileName = UUID.randomUUID() + extension;
-            Path filePath = uploadPath.resolve(newFileName);
-
-            Files.copy(pictureFile.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-
-            // Retourne le chemin relatif accessible par le front
-            return "/uploads/" + newFileName;
-
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to store file: " + e.getMessage(), e);
-        }
-    }
-
     public Rental updateRental(RentalDTO rentalDTO) {
-    // Récupérer la location existante
-    Rental rental = rentalRepository.findById(rentalDTO.getId())
-            .orElseThrow(() -> new RuntimeException("Rental not found"));
+        Rental rental = rentalRepository.findById(rentalDTO.getId())
+                .orElseThrow(() -> new RuntimeException("Rental not found"));
 
-    // Récupérer l'utilisateur actuellement connecté
-    UserDetails currentUser = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User owner = userRepository.findByEmail(rentalDTO.getOwnerEmail())
+                .orElseThrow(() -> new RuntimeException("Owner not found"));
 
-    // Vérifier que l'utilisateur connecté est bien le propriétaire de la location
-    if (!rental.getOwner().getEmail().equals(currentUser.getUsername())) {
-        throw new RuntimeException("You are not authorized to update this rental.");
+        rental.setName(rentalDTO.getName());
+        rental.setSurface(rentalDTO.getSurface());
+        rental.setPrice(rentalDTO.getPrice());
+        rental.setPicture(rentalDTO.getPicture() != null ? rentalDTO.getPicture() : rental.getPicture()); // Met à jour l'image si un nouveau fichier est fourni
+        rental.setDescription(rentalDTO.getDescription());
+        rental.setOwner(owner); // Le propriétaire reste le même
+        rental.setUpdatedAt(LocalDateTime.now());
+
+        return rentalRepository.save(rental);
     }
 
-    // Récupérer le propriétaire basé sur l'email
-    User owner = userRepository.findByEmail(rentalDTO.getOwnerEmail())
-            .orElseThrow(() -> new RuntimeException("Owner not found"));
+  
 
-    // Mettre à jour les informations de la location
-    rental.setName(rentalDTO.getName());
-    rental.setSurface(rentalDTO.getSurface());
-    rental.setPrice(rentalDTO.getPrice());
-    rental.setDescription(rentalDTO.getDescription());
-    rental.setOwner(owner);
-    rental.setUpdatedAt(LocalDateTime.now());
-
-    // Mettre à jour l'image si un fichier est fourni
-    if (rentalDTO.getPictureFile() != null && !rentalDTO.getPictureFile().isEmpty()) {
-        String imagePath = savePicture(rentalDTO.getPictureFile());
-        rental.setPicture(imagePath);
-    }
-
-    return rentalRepository.save(rental);
-}
-public RentalDetailsDto convertToDetailsDto(Rental rental) {
-    RentalDetailsDto dto = new RentalDetailsDto();
-    dto.setId(rental.getId());
-    dto.setName(rental.getName());
-    dto.setSurface(rental.getSurface());
-    dto.setPrice(rental.getPrice());
-    dto.setPicture(rental.getPicture());
-    dto.setDescription(rental.getDescription());
-
-    dto.setOwner_id(rental.getOwner().getId());
-    dto.setOwner_name(rental.getOwner().getName());
-    dto.setOwner_email(rental.getOwner().getEmail());
-
-    dto.setCreated_at(rental.getCreatedAt());
-    dto.setUpdated_at(rental.getUpdatedAt());
-
-    return dto;
-}
-
+    
 }
