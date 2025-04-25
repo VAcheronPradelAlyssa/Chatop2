@@ -1,11 +1,17 @@
 package com.openclassrooms.chatop.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.openclassrooms.chatop.dto.RentalDTO;
 import com.openclassrooms.chatop.dto.RentalResponse;
 import com.openclassrooms.chatop.entity.Rental;
 import com.openclassrooms.chatop.service.RentalService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -70,6 +76,11 @@ public class RentalController {
         return ResponseEntity.ok(createdRental);
     }
 
+    @Operation(summary = "Create a new rental", description = "Creates a new rental with the provided details.", security = {
+            @SecurityRequirement(name = "Bearer Authentication") })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Rental created successfully", content = @Content(schema = @Schema(implementation = RentalResponse.class)))
+    })
     @GetMapping
     public Map<String, List<RentalResponse>> getRentals() {
         List<RentalResponse> rentalList = rentalService.getAllRentals();
@@ -78,26 +89,37 @@ public class RentalController {
         return response;
     }
 
+    @Operation(summary = "Get rental by ID", description = "Fetches rental information for a specific rental by its ID.", security = {
+            @SecurityRequirement(name = "Bearer Authentication") })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Rental found", content = @Content(schema = @Schema(implementation = RentalResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Rental not found")
+    })
     @GetMapping("/{id}")
     public ResponseEntity<RentalResponse> getRentalById(@PathVariable Integer id) {
         return rentalService.getRentalById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    @Operation(summary = "Update rental by ID", description = "Updates the information of a specific rental by its ID.", security = {
+            @SecurityRequirement(name = "Bearer Authentication") })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Rental updated successfully", content = @Content(schema = @Schema(implementation = RentalResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Rental not found")
+    })
     @PutMapping(value = "/{id}", consumes = "multipart/form-data")
     public ResponseEntity<Rental> updateRental(
             @PathVariable Integer id,
             @RequestPart("rental") RentalDTO rentalDTO,
-            @RequestPart(value = "picture", required = false) MultipartFile pictureFile
-    ) {
+            @RequestPart(value = "picture", required = false) MultipartFile pictureFile) {
         // Met à jour le DTO avec l'ID et le fichier image
         rentalDTO.setId(id);
         rentalDTO.setPictureFile(pictureFile);
-        
+
         // Appeler le service pour la mise à jour
         Rental updated = rentalService.updateRental(rentalDTO);
         return ResponseEntity.ok(updated);
     }
-    
 
 }
