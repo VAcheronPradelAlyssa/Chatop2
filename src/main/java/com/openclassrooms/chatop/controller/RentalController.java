@@ -1,8 +1,12 @@
 package com.openclassrooms.chatop.controller;
 
 import com.openclassrooms.chatop.dto.RentalDTO;
+import com.openclassrooms.chatop.dto.RentalDetailsDto;
+import com.openclassrooms.chatop.repository.RentalRepository;
+
 import com.openclassrooms.chatop.dto.RentalResponse;
 import com.openclassrooms.chatop.entity.Rental;
+import com.openclassrooms.chatop.repository.RentalRepository;
 import com.openclassrooms.chatop.service.RentalService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -101,6 +105,7 @@ public class RentalController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+
 
     @Operation(summary = "Update rental by ID", description = "Updates the information of a specific rental by its ID.", security = {
             @SecurityRequirement(name = "Bearer Authentication") })

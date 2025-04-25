@@ -1,6 +1,7 @@
 package com.openclassrooms.chatop.service;
 
 import com.openclassrooms.chatop.dto.RentalDTO;
+import com.openclassrooms.chatop.dto.RentalDetailsDto;
 import com.openclassrooms.chatop.dto.RentalResponse;
 import com.openclassrooms.chatop.entity.Rental;
 import com.openclassrooms.chatop.entity.User;
@@ -128,6 +129,24 @@ public class RentalService {
     }
 
     return rentalRepository.save(rental);
+}
+public RentalDetailsDto convertToDetailsDto(Rental rental) {
+    RentalDetailsDto dto = new RentalDetailsDto();
+    dto.setId(rental.getId());
+    dto.setName(rental.getName());
+    dto.setSurface(rental.getSurface());
+    dto.setPrice(rental.getPrice());
+    dto.setPicture(rental.getPicture());
+    dto.setDescription(rental.getDescription());
+
+    dto.setOwner_id(rental.getOwner().getId());
+    dto.setOwner_name(rental.getOwner().getName());
+    dto.setOwner_email(rental.getOwner().getEmail());
+
+    dto.setCreated_at(rental.getCreatedAt());
+    dto.setUpdated_at(rental.getUpdatedAt());
+
+    return dto;
 }
 
 }
