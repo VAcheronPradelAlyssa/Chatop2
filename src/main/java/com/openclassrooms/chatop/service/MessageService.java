@@ -21,13 +21,13 @@ import java.util.Optional;
 public class MessageService {
 
     @Autowired
-    private MessageRepository messageRepository;  // Repository pour l'entité Message
+    private MessageRepository messageRepository;
 
     @Autowired
-    private UserRepository userRepository;  // Repository pour l'entité User
+    private UserRepository userRepository;
 
     @Autowired
-    private RentalRepository rentalRepository;  // Repository pour l'entité Rental
+    private RentalRepository rentalRepository;
 
     /**
      * Crée un nouveau message associé à un utilisateur et une location.
@@ -39,41 +39,35 @@ public class MessageService {
      * @throws RuntimeException si l'utilisateur ou la location n'existent pas dans la base de données
      */
     public MessageResponse createMessage(MessageRequest messageRequest) {
-        // Création d'un nouvel objet Message
         Messages message = new Messages();
 
-        // Récupérer l'utilisateur de la base de données en utilisant l'ID de l'utilisateur
         Optional<User> userInDB = userRepository.findById(Integer.valueOf(messageRequest.getUser_id()));
         if (userInDB.isPresent()) {
-            message.setUser(userInDB.get());  // Lier l'utilisateur trouvé au message
+            message.setUser(userInDB.get());
         } else {
-            throw new RuntimeException("User not found");  // Si l'utilisateur n'existe pas, une exception est levée
+            throw new RuntimeException("User not found");
         }
 
-        // Récupérer la location de la base de données en utilisant l'ID de la location
         Optional<Rental> rentalInDB = rentalRepository.findById(messageRequest.getRental_id());
         if (rentalInDB.isPresent()) {
-            message.setRental(rentalInDB.get());  // Lier la location trouvée au message
+            message.setRental(rentalInDB.get());
         } else {
-            throw new RuntimeException("Rental not found");  // Si la location n'existe pas, une exception est levée
+            throw new RuntimeException("Rental not found");
         }
 
-        // Définir le message, la date de création et la date de mise à jour
         message.setMessage(messageRequest.getMessage());
-        message.setCreatedAt(LocalDateTime.now());  // Date de création
-        message.setUpdatedAt(LocalDateTime.now());  // Date de mise à jour
+        message.setCreatedAt(LocalDateTime.now());
+        message.setUpdatedAt(LocalDateTime.now());
 
-        // Enregistrer le message dans la base de données
         messageRepository.save(message);
 
-        // Retourner une réponse contenant les informations du message
         return new MessageResponse(
-                message.getId(),  // ID du message
-                message.getRental().getId(),  // ID de la location associée
-                message.getUser().getId(),  // ID de l'utilisateur associé
-                message.getMessage(),  // Contenu du message
-                message.getCreatedAt(),  // Date de création
-                message.getUpdatedAt()   // Date de mise à jour
+                message.getId(),
+                message.getRental().getId(),
+                message.getUser().getId(),
+                message.getMessage(),
+                message.getCreatedAt(),
+                message.getUpdatedAt()
         );
     }
 }

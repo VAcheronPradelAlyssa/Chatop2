@@ -1,7 +1,7 @@
 package com.openclassrooms.chatop.service;
 
-import com.openclassrooms.chatop.entity.User; // Assurez-vous que cette importation correspond à votre entité utilisateur
-import com.openclassrooms.chatop.repository.UserRepository; // Assurez-vous que cette importation correspond à votre repository utilisateur
+import com.openclassrooms.chatop.entity.User;
+import com.openclassrooms.chatop.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 public class CustomUserDetailsService implements UserDetailsService {
 
     @Autowired
-    private UserRepository userRepository; // Injecte le repository utilisateur pour accéder aux données utilisateur
+    private UserRepository userRepository;
 
     /**
      * Charge un utilisateur en fonction de son email.
@@ -34,8 +34,8 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         // Retourne un objet UserDetails (utilisé par Spring Security pour l'authentification)
         return org.springframework.security.core.userdetails.User.withUsername(user.getEmail())
-                .password(user.getPassword()) // Mot de passe de l'utilisateur (déjà crypté dans la base de données)
-                .authorities("USER") // Attribution d'un rôle ou d'une autorité (ici "USER", mais peut être modifié selon les rôles définis)
+                .password(user.getPassword()) 
+                .authorities("USER") 
                 .build();
     }
 }

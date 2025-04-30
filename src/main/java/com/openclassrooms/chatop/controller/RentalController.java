@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +34,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/rentals")
+@Tag(name = "Rentals", description = "API pour la gestion des locations")
 public class RentalController {
 
     private static final String UPLOAD_DIR = "uploads/";
@@ -51,6 +53,11 @@ public class RentalController {
      * @param userDetails Utilisateur connecté (injecté par Spring Security)
      * @return L'objet Rental créé
      */
+    @Operation(summary = "Create a new rental", description = "Creates a new rental with an image upload.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Rental created successfully", content = @Content(schema = @Schema(implementation = Rental.class))),
+        @ApiResponse(responseCode = "401", description = "Unauthorized access")
+    })
     @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<Rental> createRental(
             @RequestParam("name") String name,
@@ -77,7 +84,7 @@ public class RentalController {
             return ResponseEntity.internalServerError().build();
         }
 
-        // Construction du Dto à partir des données
+        // Construction du DTO à partir des données
         RentalDto rentalDto = new RentalDto();
         rentalDto.setName(name);
         rentalDto.setSurface(surface);
@@ -98,7 +105,7 @@ public class RentalController {
     @Operation(summary = "Get all rentals", description = "Fetches all rental listings.", security = {
             @SecurityRequirement(name = "Bearer Authentication") })
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "List of rentals", content = @Content(schema = @Schema(implementation = RentalResponse.class)))
+        @ApiResponse(responseCode = "200", description = "List of rentals", content = @Content(schema = @Schema(implementation = RentalResponse.class)))
     })
     @GetMapping
     public Map<String, List<RentalResponse>> getRentals() {
@@ -117,8 +124,8 @@ public class RentalController {
     @Operation(summary = "Get rental by ID", description = "Fetches rental information for a specific rental by its ID.", security = {
             @SecurityRequirement(name = "Bearer Authentication") })
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Rental found", content = @Content(schema = @Schema(implementation = RentalResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Rental not found")
+        @ApiResponse(responseCode = "200", description = "Rental found", content = @Content(schema = @Schema(implementation = RentalResponse.class))),
+        @ApiResponse(responseCode = "404", description = "Rental not found")
     })
     @GetMapping("/{id}")
     public ResponseEntity<RentalResponse> getRentalById(@PathVariable Integer id) {
@@ -134,7 +141,6 @@ public class RentalController {
      * @param name Nouveau nom
      * @param surface Nouvelle surface
      * @param price Nouveau prix
-     * @param picture Nouvelle image (facultatif)
      * @param description Nouvelle description
      * @param userDetails Utilisateur connecté (propriétaire)
      * @return La location mise à jour ou 404
@@ -142,8 +148,8 @@ public class RentalController {
     @Operation(summary = "Update rental by ID", description = "Updates the information of a specific rental by its ID.", security = {
             @SecurityRequirement(name = "Bearer Authentication") })
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Rental updated successfully", content = @Content(schema = @Schema(implementation = RentalResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Rental not found")
+        @ApiResponse(responseCode = "200", description = "Rental updated successfully", content = @Content(schema = @Schema(implementation = RentalResponse.class))),
+        @ApiResponse(responseCode = "404", description = "Rental not found")
     })
     @PutMapping("/{id}")
     public ResponseEntity<Rental> updateRental(
@@ -162,7 +168,6 @@ public class RentalController {
         rentalDto.setName(name);
         rentalDto.setSurface(surface);
         rentalDto.setPrice(price);
-        rentalDto.setPicture(picture != null ? picture.getOriginalFilename() : null); // Image mise à jour si présente
         rentalDto.setDescription(description);
         rentalDto.setOwnerEmail(ownerEmail);
 

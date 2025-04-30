@@ -99,7 +99,6 @@ public class RentalService {
         rental.setName(rentalDto.getName());
         rental.setSurface(rentalDto.getSurface());
         rental.setPrice(rentalDto.getPrice());
-        rental.setPicture(rentalDto.getPicture() != null ? rentalDto.getPicture() : rental.getPicture());  // Mise à jour de l'image si un nouveau fichier est fourni
         rental.setDescription(rentalDto.getDescription());
         rental.setOwner(owner);  // Le propriétaire reste le même
         rental.setUpdatedAt(LocalDateTime.now());
