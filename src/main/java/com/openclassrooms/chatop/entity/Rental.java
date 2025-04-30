@@ -3,6 +3,7 @@ package com.openclassrooms.chatop.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Entity
@@ -19,6 +20,10 @@ public class Rental {
     private String picture;
     private String description;
 
+    @OneToMany(mappedBy = "rental", cascade = CascadeType.ALL, orphanRemoval = true)
+    // Relation un-à-plusieurs avec les messages, cascade de toutes les opérations et gestion du retrait des orphelins
+
+    private List<Messages> messages;
     @ManyToOne
     @JoinColumn(name = "owner_id", referencedColumnName = "id", nullable = false)
     private User owner;

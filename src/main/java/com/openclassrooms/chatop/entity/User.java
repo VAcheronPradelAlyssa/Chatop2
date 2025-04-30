@@ -46,6 +46,10 @@ public class User implements UserDetails {
         }
         this.updatedAt = LocalDateTime.now();
     }
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    // Relation un-à-plusieurs avec les messages, traitement des opérations en cascade et suppression des orphelins
+
+    private List<Messages> messages;
 
     @PreUpdate
     protected void onUpdate() {
