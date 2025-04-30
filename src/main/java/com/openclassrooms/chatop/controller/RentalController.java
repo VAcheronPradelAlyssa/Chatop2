@@ -51,7 +51,7 @@ public class RentalController {
      * @param picture Fichier image (optionnel)
      * @param description Description de la location
      * @param userDetails Utilisateur connecté (injecté par Spring Security)
-     * @return L'objet Rental créé
+     * @return Réponse contenant un message de succès
      */
     @Operation(summary = "Create a new rental", description = "Creates a new rental with an image upload.")
     @ApiResponses(value = {
@@ -59,7 +59,7 @@ public class RentalController {
         @ApiResponse(responseCode = "401", description = "Unauthorized access")
     })
     @PostMapping(consumes = "multipart/form-data")
-    public ResponseEntity<Rental> createRental(
+    public ResponseEntity<Map<String, String>> createRental(
             @RequestParam("name") String name,
             @RequestParam("surface") Double surface,
             @RequestParam("price") Double price,
@@ -81,7 +81,8 @@ public class RentalController {
         try {
             Files.write(filePath, picture.getBytes());
         } catch (IOException e) {
-            return ResponseEntity.internalServerError().build();
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("message", "Échec de l'upload de l'image."));
         }
 
         // Construction du DTO à partir des données
@@ -89,12 +90,15 @@ public class RentalController {
         rentalDto.setName(name);
         rentalDto.setSurface(surface);
         rentalDto.setPrice(price);
-        rentalDto.setPicture("http://localhost:3001/uploads/" + fileName); // URL d’accès
+        rentalDto.setPicture("http://localhost:3001/uploads/" + fileName); // URL d’accès à l'image
         rentalDto.setDescription(description);
         rentalDto.setOwnerEmail(ownerEmail);
 
-        Rental createdRental = rentalService.createRental(rentalDto);
-        return ResponseEntity.ok(createdRental);
+        // Création de la location
+        rentalService.createRental(rentalDto);
+
+        // Réponse avec message de succès
+        return ResponseEntity.ok(Map.of("message", "Location créée avec succès !"));
     }
 
     /**
@@ -128,32 +132,14 @@ public class RentalController {
         @ApiResponse(responseCode = "404", description = "Rental not found")
     })
     @GetMapping("/{id}")
-public ResponseEntity<RentalResponse> getRentalById(@PathVariable Integer id) {
-    return rentalService.getRentalById(id)
-            .map(ResponseEntity::ok)
-            .orElse(ResponseEntity.notFound().build());
-}
+    public ResponseEntity<RentalResponse> getRentalById(@PathVariable Integer id) {
+        return rentalService.getRentalById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 
-
-    /**
-     * Met à jour une location existante.
-     *
-     * @param id ID de la location
-     * @param name Nouveau nom
-     * @param surface Nouvelle surface
-     * @param price Nouveau prix
-     * @param description Nouvelle description
-     * @param userDetails Utilisateur connecté (propriétaire)
-     * @return La location mise à jour ou 404
-     */
-    @Operation(summary = "Update rental by ID", description = "Updates the information of a specific rental by its ID.", security = {
-            @SecurityRequirement(name = "Bearer Authentication") })
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Rental updated successfully", content = @Content(schema = @Schema(implementation = RentalResponse.class))),
-        @ApiResponse(responseCode = "404", description = "Rental not found")
-    })
     @PutMapping("/{id}")
-    public ResponseEntity<Rental> updateRental(
+    public ResponseEntity<Map<String, String>> updateRental(
             @PathVariable Integer id,
             @RequestParam("name") String name,
             @RequestParam("surface") Double surface,
@@ -161,9 +147,10 @@ public ResponseEntity<RentalResponse> getRentalById(@PathVariable Integer id) {
             @RequestParam(value = "picture", required = false) MultipartFile picture,
             @RequestParam("description") String description,
             @AuthenticationPrincipal UserDetails userDetails) {
-
+    
         String ownerEmail = userDetails.getUsername();
-
+    
+        // Création du DTO pour la mise à jour
         RentalDto rentalDto = new RentalDto();
         rentalDto.setId(id);
         rentalDto.setName(name);
@@ -171,8 +158,16 @@ public ResponseEntity<RentalResponse> getRentalById(@PathVariable Integer id) {
         rentalDto.setPrice(price);
         rentalDto.setDescription(description);
         rentalDto.setOwnerEmail(ownerEmail);
-
+    
+        // Appel du service pour mettre à jour la location
         Rental updatedRental = rentalService.updateRental(rentalDto);
-        return updatedRental != null ? ResponseEntity.ok(updatedRental) : ResponseEntity.notFound().build();
+        
+        if (updatedRental != null) {
+            // Si la location a été mise à jour avec succès
+            return ResponseEntity.ok(Map.of("message", "Location mise à jour avec succès !"));
+        } else {
+            // Si la location n'a pas été trouvée
+            return ResponseEntity.status(404).body(Map.of("message", "Location non trouvée !"));
+        }
     }
 }
