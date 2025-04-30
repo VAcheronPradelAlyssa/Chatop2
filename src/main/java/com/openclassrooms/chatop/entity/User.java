@@ -42,13 +42,10 @@ public class User implements UserDetails {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    /**
-     * Liste des messages envoyés par cet utilisateur.
-     * Relation un-à-plusieurs avec cascade des opérations et suppression automatique des orphelins.
-     */
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Messages> messages;
-
+    // One-to-many relationship with messages, handling cascade operations and orphan removal
+    private List<Message> messages;
+    
     /**
      * Initialise les dates lors de la création de l'entité.
      */

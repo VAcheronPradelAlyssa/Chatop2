@@ -44,4 +44,6 @@ public class RentalDto {
 
     @Schema(description = "Date et heure de création de la location", accessMode = Schema.AccessMode.READ_ONLY)
     private LocalDateTime created_at;
+
+
 }

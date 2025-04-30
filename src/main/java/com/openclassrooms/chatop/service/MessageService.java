@@ -2,9 +2,9 @@ package com.openclassrooms.chatop.service;
 
 import com.openclassrooms.chatop.dto.MessageRequest;
 import com.openclassrooms.chatop.dto.MessageResponse;
-import com.openclassrooms.chatop.entity.Messages;
-import com.openclassrooms.chatop.entity.Rental;
+import com.openclassrooms.chatop.entity.Message;
 import com.openclassrooms.chatop.entity.User;
+import com.openclassrooms.chatop.entity.Rental;
 import com.openclassrooms.chatop.repository.MessageRepository;
 import com.openclassrooms.chatop.repository.RentalRepository;
 import com.openclassrooms.chatop.repository.UserRepository;
@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 /**
- * Service de gestion des messages, incluant la création et la persistance des messages associés à une location et un utilisateur.
+ * Service class for handling message-related operations, particularly creating messages.
  */
 @Service
 public class MessageService {
@@ -30,17 +30,15 @@ public class MessageService {
     private RentalRepository rentalRepository;
 
     /**
-     * Crée un nouveau message associé à un utilisateur et une location.
-     * Cette méthode vérifie que l'utilisateur et la location existent dans la base de données,
-     * puis enregistre le message dans la base de données.
+     * Creates a new message associated with a user and a rental.
      *
-     * @param messageRequest la demande contenant les détails du message, l’ID d’utilisateur et l’ID de location
-     * @return un objet MessageResponse contenant les informations du message créé
-     * @throws RuntimeException si l'utilisateur ou la location n'existent pas dans la base de données
+     * @param messageRequest the request containing message details, user ID, and rental ID
+     * @return the created message details as a MessageResponse
      */
     public MessageResponse createMessage(MessageRequest messageRequest) {
-        Messages message = new Messages();
+        Message message = new Message();
 
+        // Fetch the user from the database using the user ID from the request
         Optional<User> userInDB = userRepository.findById(Integer.valueOf(messageRequest.getUser_id()));
         if (userInDB.isPresent()) {
             message.setUser(userInDB.get());
@@ -48,6 +46,7 @@ public class MessageService {
             throw new RuntimeException("User not found");
         }
 
+        // Fetch the rental from the database using the rental ID from the request
         Optional<Rental> rentalInDB = rentalRepository.findById(messageRequest.getRental_id());
         if (rentalInDB.isPresent()) {
             message.setRental(rentalInDB.get());
@@ -55,12 +54,15 @@ public class MessageService {
             throw new RuntimeException("Rental not found");
         }
 
+        // Set message content and timestamps
         message.setMessage(messageRequest.getMessage());
         message.setCreatedAt(LocalDateTime.now());
         message.setUpdatedAt(LocalDateTime.now());
 
+        // Save the message to the database
         messageRepository.save(message);
 
+        // Return a response object with the saved message details
         return new MessageResponse(
                 message.getId(),
                 message.getRental().getId(),

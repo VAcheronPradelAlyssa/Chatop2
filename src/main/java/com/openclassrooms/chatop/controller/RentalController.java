@@ -128,11 +128,12 @@ public class RentalController {
         @ApiResponse(responseCode = "404", description = "Rental not found")
     })
     @GetMapping("/{id}")
-    public ResponseEntity<RentalResponse> getRentalById(@PathVariable Integer id) {
-        return rentalService.getRentalById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
+public ResponseEntity<RentalResponse> getRentalById(@PathVariable Integer id) {
+    return rentalService.getRentalById(id)
+            .map(ResponseEntity::ok)
+            .orElse(ResponseEntity.notFound().build());
+}
+
 
     /**
      * Met à jour une location existante.

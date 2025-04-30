@@ -38,17 +38,7 @@ public class Rental {
     @Schema(description = "Description détaillée de la location", example = "Belle maison avec jardin")
     private String description;
 
-    /**
-     * Liste des messages liés à cette location.
-     * Relation un-à-plusieurs avec cascade de toutes les opérations et suppression des orphelins.
-     */
-    @OneToMany(mappedBy = "rental", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Messages> messages;
-
-    /**
-     * Propriétaire de la location (utilisateur).
-     * Relation plusieurs-à-un avec l'entité User.
-     */
+   
     @ManyToOne
     @JoinColumn(name = "owner_id", referencedColumnName = "id", nullable = false)
     private User owner;
@@ -60,7 +50,10 @@ public class Rental {
     @Column(name = "updated_at")
     @Schema(description = "Date et heure de la dernière mise à jour de la location", example = "2023-10-01T12:00:00")
     private LocalDateTime updatedAt;
-
+    
+    @OneToMany(mappedBy = "rental", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Message> message;
+    
     /**
      * Méthode appelée automatiquement avant la création d’un enregistrement.
      */

@@ -10,8 +10,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 
 /**
- * Représente l’entité "Message" dans la base de données.
- * Un message est associé à une location spécifique et un utilisateur.
+ * Représente l’entité "Message" dans la base de données, associant des messages à une location spécifique et un utilisateur.
  * L'audit automatique est activé pour les dates de création et de mise à jour.
  */
 @Entity
@@ -19,7 +18,7 @@ import java.time.LocalDateTime;
 @EntityListeners(AuditingEntityListener.class) // Active la gestion automatique des dates (création et modification)
 @Getter
 @Setter
-public class Messages {
+public class Message {
 
     /**
      * Identifiant unique du message, généré automatiquement.
@@ -32,7 +31,7 @@ public class Messages {
      * Location associée au message.
      * Chaque message est lié à une location précise via la clé étrangère "rental_id".
      */
-    @ManyToOne(fetch = FetchType.LAZY) // LAZY loading pour optimiser les performances lors de la récupération
+    @ManyToOne(fetch = FetchType.LAZY) // LAZY loading pour optimiser les performances
     @JoinColumn(name = "rental_id", nullable = false) // La clé étrangère à l’entité Rental
     private Rental rental;
 
@@ -65,5 +64,4 @@ public class Messages {
     @LastModifiedDate // L'annotation permet de capturer la date de la dernière modification automatiquement
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-
 }

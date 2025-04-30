@@ -1,29 +1,26 @@
 package com.openclassrooms.chatop.repository;
 
-import com.openclassrooms.chatop.entity.Messages;
+import com.openclassrooms.chatop.entity.Message;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
 /**
- * Interface de dépôt pour l’entité Messages, fournissant des opérations CRUD
- * ainsi que des méthodes personnalisées pour interroger les messages selon la location ou l'utilisateur.
+ * Repository interface for the Message entity, providing CRUD operations and custom queries.
  */
-public interface MessageRepository extends JpaRepository<Messages, Long> {
+public interface MessageRepository extends JpaRepository<Message, Integer> {
 
     /**
-     * Récupère la liste des messages associés à une location spécifique.
-     *
-     * @param rentalId l’identifiant de la location concernée
-     * @return une liste de messages liés à la location spécifiée
+     * Finds a list of messages associated with a specific rental by rental ID.
+     * @param rentalId the ID of the rental
+     * @return a list of messages linked to the specified rental
      */
-    List<Messages> findByRentalId(Long rentalId);
+    List<Message> findByRentalId(Integer rentalId);
 
     /**
-     * Récupère la liste des messages envoyés par un utilisateur spécifique.
-     *
-     * @param userId l’identifiant de l’utilisateur
-     * @return une liste de messages liés à l’utilisateur spécifié
+     * Finds a list of messages associated with a specific user by user ID.
+     * @param userId the ID of the user
+     * @return a list of messages linked to the specified user
      */
-    List<Messages> findByUserId(Long userId);
+    List<Message> findByUserId(Integer userId);
 }

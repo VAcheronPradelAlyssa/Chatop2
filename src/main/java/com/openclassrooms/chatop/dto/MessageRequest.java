@@ -1,6 +1,5 @@
 package com.openclassrooms.chatop.dto;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -9,28 +8,21 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * DTO représentant la demande de création d'un message.
- * Contient les informations nécessaires à la création d'un message dans une location donnée.
+ * DTO for handling message creation requests.
+ * Validates input data for message creation related to a rental.
  */
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "DTO pour la demande de création d'un message")
 public class MessageRequest {
 
-
     @NotNull(message = "Rental ID must be provided.")
-    @Schema(description = "ID de la location associée au message", required = true)
-    private Integer rental_id;
-
+    private Integer rental_id; // ID of the rental associated with the message, must not be null.
 
     @NotNull(message = "User ID must be provided.")
-    @Schema(description = "ID de l'utilisateur qui crée le message", required = true)
-    private Integer user_id;
-
+    private Integer user_id; // ID of the user creating the message, must not be null.
 
     @Size(max = 2000, message = "Message content must not exceed 2000 characters.")
-    @Schema(description = "Contenu du message", maxLength = 2000, required = true)
-    private String message;
+    private String message; // The message content, limited to 2000 characters.
 }

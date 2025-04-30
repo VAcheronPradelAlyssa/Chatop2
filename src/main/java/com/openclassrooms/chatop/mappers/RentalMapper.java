@@ -22,7 +22,7 @@ public class RentalMapper implements Function<Rental, RentalResponse> {
                 rental.getPrice(),
                 rental.getPicture(),
                 rental.getDescription(),
-                rental.getOwner() != null ? rental.getOwner().getId() : null,
+                rental.getOwner().getId(),           // Owner's ID
                 rental.getCreatedAt(),
                 rental.getUpdatedAt()
         );
