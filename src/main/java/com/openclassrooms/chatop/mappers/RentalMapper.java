@@ -6,6 +6,10 @@ import org.springframework.stereotype.Component;
 
 import java.util.function.Function;
 
+/**
+ * Mapper permettant de transformer une entité Rental en DTO RentalResponse.
+ * Utilisé pour renvoyer les données d’une location sous forme de réponse JSON.
+ */
 @Component
 public class RentalMapper implements Function<Rental, RentalResponse> {
 
@@ -18,7 +22,7 @@ public class RentalMapper implements Function<Rental, RentalResponse> {
                 rental.getPrice(),
                 rental.getPicture(),
                 rental.getDescription(),
-                rental.getOwner().getId(),
+                rental.getOwner() != null ? rental.getOwner().getId() : null,
                 rental.getCreatedAt(),
                 rental.getUpdatedAt()
         );

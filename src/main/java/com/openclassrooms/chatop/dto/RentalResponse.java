@@ -2,21 +2,22 @@ package com.openclassrooms.chatop.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-
-@Data
+/**
+ * DTO pour renvoyer les informations d'une location.
+ * Ce DTO contient les détails d'une location, y compris son nom, sa surface, son prix, etc.
+ */
 @AllArgsConstructor
+@NoArgsConstructor
+@Data
 public class RentalResponse {
-    public RentalResponse(Long id2, String name2, Double surface2, Double price2, String picture2, String description2,
-            Long id3) {
-        //TODO Auto-generated constructor stub
-    }
     private Integer id;
     private String name;
     private Double surface;
     private Double price;
-    private String picture; // URL ou nom de l'image
+    private String picture;
     private String description;
     private Integer owner_id;
     private LocalDateTime created_at;
