@@ -1,5 +1,6 @@
 package com.openclassrooms.chatop.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -33,6 +34,7 @@ public class Message {
      */
     @ManyToOne(fetch = FetchType.LAZY) // LAZY loading pour optimiser les performances
     @JoinColumn(name = "rental_id", nullable = false) // La clé étrangère à l’entité Rental
+    @JsonBackReference
     private Rental rental;
 
     /**
@@ -41,6 +43,7 @@ public class Message {
      */
     @ManyToOne(fetch = FetchType.LAZY) // LAZY loading pour optimiser les performances
     @JoinColumn(name = "user_id", nullable = false) // La clé étrangère à l’entité User
+    @JsonBackReference
     private User user;
 
     /**

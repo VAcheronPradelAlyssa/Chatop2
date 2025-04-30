@@ -1,5 +1,6 @@
 package com.openclassrooms.chatop.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -29,23 +30,30 @@ public class User implements UserDetails {
      */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    
     private Integer id;
+
     @Column(nullable = false, unique = true)
     private String email;
+
     @Column(nullable = false)
     private String name;
+
     @Column(nullable = false)
     private String password;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    /**
+     * Liste des messages écrits par cet utilisateur.
+     */
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    // One-to-many relationship with messages, handling cascade operations and orphan removal
+    @JsonManagedReference
     private List<Message> messages;
-    
+
     /**
      * Initialise les dates lors de la création de l'entité.
      */

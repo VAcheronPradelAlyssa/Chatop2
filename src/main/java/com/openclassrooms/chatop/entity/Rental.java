@@ -1,8 +1,10 @@
 package com.openclassrooms.chatop.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.Data;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -38,7 +40,9 @@ public class Rental {
     @Schema(description = "Description détaillée de la location", example = "Belle maison avec jardin")
     private String description;
 
-   
+    /**
+     * Utilisateur propriétaire de la location.
+     */
     @ManyToOne
     @JoinColumn(name = "owner_id", referencedColumnName = "id", nullable = false)
     private User owner;
@@ -50,10 +54,14 @@ public class Rental {
     @Column(name = "updated_at")
     @Schema(description = "Date et heure de la dernière mise à jour de la location", example = "2023-10-01T12:00:00")
     private LocalDateTime updatedAt;
-    
+
+    /**
+     * Liste des messages associés à la location.
+     */
     @OneToMany(mappedBy = "rental", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<Message> message;
-    
+
     /**
      * Méthode appelée automatiquement avant la création d’un enregistrement.
      */
