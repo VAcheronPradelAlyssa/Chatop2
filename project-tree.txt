@@ -1,0 +1,52 @@
+.
+├── HELP.md
+├── HELP.md:Zone.Identifier
+├── README.md
+├── mvnw
+├── mvnw.cmd
+├── mvnw.cmd:Zone.Identifier
+├── mvnw:Zone.Identifier
+├── pom.xml
+├── pom.xml:Zone.Identifier
+├── project-tree.txt
+└── src
+    ├── main
+    │   ├── java
+    │   │   └── com
+    │   │       └── openclassrooms
+    │   │           └── chatop
+    │   │               ├── ChatopApplication.java
+    │   │               ├── ChatopApplication.java:Zone.Identifier
+    │   │               ├── config
+    │   │               │   └── SecurityConfig.java
+    │   │               ├── controller
+    │   │               │   └── AuthController.java
+    │   │               ├── dto
+    │   │               │   ├── LoginResponseDto.java
+    │   │               │   ├── RegisterRequestDto.java
+    │   │               │   ├── UserDto.java
+    │   │               │   └── UserResponse.java
+    │   │               ├── entity
+    │   │               │   └── User.java
+    │   │               ├── repository
+    │   │               │   └── UserRepository.java
+    │   │               ├── security
+    │   │               │   └── JwtAuthenticationFilter.java
+    │   │               └── service
+    │   │                   ├── CustomUserDetailsService.java
+    │   │                   ├── JwtService.java
+    │   │                   └── UserService.java
+    │   └── resources
+    │       ├── application.properties
+    │       ├── application.properties:Zone.Identifier
+    │       ├── static
+    │       └── templates
+    └── test
+        └── java
+            └── com
+                └── openclassrooms
+                    └── chatop
+                        ├── ChatopApplicationTests.java
+                        └── ChatopApplicationTests.java:Zone.Identifier
+
+21 directories, 28 files
