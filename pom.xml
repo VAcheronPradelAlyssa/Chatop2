@@ -11,8 +11,8 @@
 	</parent>
 	<groupId>com.openclassrooms</groupId>
 	<artifactId>chatop</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<name>OC-ChaTopChatop</name>
+	<version>1</version>
+	<name>chatop</name>
 	<description>Project 3 for openclassrooms</description>
 
 	<properties>

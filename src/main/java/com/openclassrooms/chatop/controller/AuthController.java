@@ -8,6 +8,7 @@ import com.openclassrooms.chatop.dto.UserResponse;
 import com.openclassrooms.chatop.entity.User;
 import com.openclassrooms.chatop.repository.UserRepository;
 import com.openclassrooms.chatop.service.JwtService;
+import com.openclassrooms.chatop.service.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -15,6 +16,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -37,7 +39,8 @@ public class AuthController {
 
     @Autowired
     private UserRepository userRepository;
-
+ @Autowired
+    private UserService userService;
     @Autowired
     private PasswordEncoder passwordEncoder;
 
@@ -103,25 +106,17 @@ public class AuthController {
         @ApiResponse(responseCode = "201", description = "User registered successfully", content = @Content(schema = @Schema(implementation = RegisterResponseDto.class))),
         @ApiResponse(responseCode = "409", description = "Email already in use")
     })
-    @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequestDto request) {
-        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Un utilisateur avec cet email existe déjà.");
+     @PostMapping("/register")
+    public ResponseEntity<RegisterResponseDto> register(@RequestBody @Valid RegisterRequestDto request) {
+        try {
+            // Appeler le service pour enregistrer l'utilisateur et obtenir la réponse
+            RegisterResponseDto response = userService.registerUser(request);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (IllegalArgumentException e) {
+            // Si l'email est déjà pris, renvoyer une erreur de conflit
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
         }
-
-        User user = new User();
-        user.setEmail(request.getEmail());
-        user.setName(request.getName());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setCreatedAt(java.time.LocalDateTime.now());
-        user.setUpdatedAt(java.time.LocalDateTime.now());
-
-        userRepository.save(user);
-
-        String token = jwtService.generateToken(user.getEmail());
-
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new RegisterResponseDto(token, user.getId()));
     }
 
     /**

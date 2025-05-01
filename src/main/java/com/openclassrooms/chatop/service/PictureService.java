@@ -9,42 +9,39 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-/**
- * Service de gestion des images, incluant le téléchargement et la sauvegarde des fichiers.
- */
 @Service
 public class PictureService {
 
-    // Dossier où les fichiers seront enregistrés
-    private static final String UPLOAD_DIR = "uploads";  // dossier dans ton projet ou en dehors
+    private static final String UPLOAD_DIR = "uploads/";
 
-    /**
-     * Télécharge un fichier et le sauvegarde dans un répertoire spécifique avec un nom unique.
-     * Si le fichier est vide, une exception est levée.
-     *
-     * @param file le fichier à télécharger
-     * @return le nom du fichier sauvegardé
-     * @throws IOException si une erreur se produit lors de l'écriture du fichier
-     */
-    public String uploadFile(MultipartFile file) throws IOException {
-        if (file.isEmpty()) {
-            throw new IOException("Le fichier est vide");  // Vérifie si le fichier est vide et lève une exception si nécessaire
+    public String uploadPicture(MultipartFile picture) throws IOException {
+        // Vérifiez que le fichier n'est pas vide et a un nom
+        if (picture.isEmpty() || picture.getOriginalFilename() == null) {
+            throw new IllegalArgumentException("Le fichier est vide ou n'a pas de nom.");
         }
 
-        // Crée le dossier de destination si nécessaire
         File uploadDir = new File(UPLOAD_DIR);
         if (!uploadDir.exists()) {
-            uploadDir.mkdirs();  // Crée le répertoire si il n'existe pas
+            uploadDir.mkdirs();
         }
 
-        // Crée un nom de fichier unique basé sur le timestamp actuel et le nom original du fichier
-        String filename = System.currentTimeMillis() + "_" + file.getOriginalFilename();
-        Path filePath = Paths.get(UPLOAD_DIR, filename);
+        String originalFilename = picture.getOriginalFilename();
 
-        // Sauvegarde le fichier sur le système de fichiers
-        Files.copy(file.getInputStream(), filePath);
+        // Vérifiez si le nom de fichier contient un point pour extraire l'extension
+        int dotIndex = originalFilename.lastIndexOf('.');
+        if (dotIndex < 0) {
+            throw new IllegalArgumentException("Le nom de fichier n'a pas d'extension valide.");
+        }
 
-        // Retourne le nom du fichier sauvegardé (tu peux aussi retourner une URL si nécessaire)
-        return filename;
+        String fileBaseName = originalFilename.substring(0, dotIndex);
+        String fileExtension = originalFilename.substring(dotIndex);
+
+        // Utilisez le nom de base original et ajoutez un timestamp pour garantir l'unicité
+        String fileName = fileBaseName + "_" + System.currentTimeMillis() + fileExtension;
+
+        Path filePath = Paths.get(UPLOAD_DIR, fileName);
+        Files.write(filePath, picture.getBytes());
+
+        return fileName;
     }
 }

@@ -1,6 +1,7 @@
 package com.openclassrooms.chatop.service;
 
-import com.openclassrooms.chatop.dto.UserDto;
+import com.openclassrooms.chatop.dto.RegisterRequestDto;
+import com.openclassrooms.chatop.dto.RegisterResponseDto;
 import com.openclassrooms.chatop.dto.UserResponse;
 import com.openclassrooms.chatop.entity.User;
 import com.openclassrooms.chatop.repository.UserRepository;
@@ -22,26 +23,38 @@ public class UserService {
 
     @Autowired
     private UserRepository userRepository;
-
+    @Autowired
+    private JwtService jwtService;
     private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-    /**
+      /**
      * Enregistre un nouvel utilisateur.
      *
-     * @param userDto les données de l'utilisateur à enregistrer
-     * @return l'utilisateur enregistré
+     * @param request les données de l'utilisateur à enregistrer
+     * @return une réponse contenant le token JWT et l'ID de l'utilisateur
      */
-    public User registerUser(UserDto userDto) {
-        // Encoder le mot de passe avant de l'enregistrer
-        String encodedPassword = passwordEncoder.encode(userDto.getPassword());
+    public RegisterResponseDto registerUser(RegisterRequestDto request) {
+        // Vérifier si l'email existe déjà
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("Un utilisateur avec cet email existe déjà.");
+        }
+
+        // Créer un nouvel utilisateur
         User user = new User();
-        user.setEmail(userDto.getEmail());
-        user.setName(userDto.getName());
-        user.setPassword(encodedPassword);
+        user.setEmail(request.getEmail());
+        user.setName(request.getName());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
 
-        return userRepository.save(user);
+        // Sauvegarder l'utilisateur dans la base de données
+        user = userRepository.save(user);
+
+        // Générer un token JWT pour l'utilisateur
+        String token = jwtService.generateToken(user.getEmail());
+
+        // Retourner une réponse avec le token et l'ID de l'utilisateur
+        return new RegisterResponseDto(token, user.getId());
     }
 
     /**
