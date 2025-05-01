@@ -79,7 +79,7 @@ file.upload-dir=uploads/
 ## Clé secrète pour JWT (à garder secrète)
 jwt.secret=VotreCléSecrèteTrèsComplexe
 
-
+````
 # Accédez au répertoire du frontend (le cas échéant)
 cd path/to/frontend
 
