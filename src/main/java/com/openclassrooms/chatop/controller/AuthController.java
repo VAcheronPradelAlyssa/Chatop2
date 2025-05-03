@@ -6,9 +6,12 @@ import com.openclassrooms.chatop.dto.RegisterRequestDto;
 import com.openclassrooms.chatop.dto.RegisterResponseDto;
 import com.openclassrooms.chatop.dto.UserResponse;
 import com.openclassrooms.chatop.entity.User;
+import com.openclassrooms.chatop.entity.UserToken;
 import com.openclassrooms.chatop.repository.UserRepository;
+import com.openclassrooms.chatop.repository.UserTokenRepository;
 import com.openclassrooms.chatop.service.JwtService;
 import com.openclassrooms.chatop.service.UserService;
+import com.openclassrooms.chatop.service.UserTokenService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -46,6 +49,9 @@ public class AuthController {
 
     @Autowired
     private JwtService jwtService;
+    @Autowired
+    private UserTokenService userTokenService;
+
 
     /**
      * Retourne les informations de l'utilisateur actuellement connecté.
@@ -131,21 +137,27 @@ public class AuthController {
         @ApiResponse(responseCode = "401", description = "Invalid credentials")
     })
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequestDto loginRequest) {
-        Optional<User> userOptional = userRepository.findByEmail(loginRequest.getEmail());
+public ResponseEntity<?> login(@RequestBody LoginRequestDto loginRequest) {
+    Optional<User> userOptional = userRepository.findByEmail(loginRequest.getEmail());
 
-        if (userOptional.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Utilisateur non trouvé");
-        }
-
-        User user = userOptional.get();
-
-        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Mot de passe invalide");
-        }
-
-        String token = jwtService.generateToken(user.getEmail());
-
-        return ResponseEntity.ok(new LoginResponseDto(token, user.getId()));
+    if (userOptional.isEmpty()) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Utilisateur non trouvé");
     }
+
+    User user = userOptional.get();
+
+    if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Mot de passe invalide");
+    }
+
+    // Générer le token JWT
+    String token = jwtService.generateToken(user.getEmail());
+
+    // Enregistrer le token dans la table user_tokens
+    userTokenService.saveUserToken(user, token);
+
+    return ResponseEntity.ok(new LoginResponseDto(token, user.getId()));
+}
+
+
 }
